@@ -4,6 +4,10 @@ import { createOAuthClient } from '@/lib/youtube/oauth';
 import { getYouTubeRedirectUri } from '@/lib/app-url';
 
 export async function GET(request: NextRequest) {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return NextResponse.redirect(new URL('/?auth=missing-config', request.url));
+  }
+
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
   const expectedState = await consumeOAuthState();

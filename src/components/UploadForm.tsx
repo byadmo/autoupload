@@ -13,6 +13,15 @@ type VideoDetails = {
   type: string;
 };
 
+type DeploymentConfig = {
+  youtubeReady: boolean;
+  hasGoogleClientId: boolean;
+  hasGoogleClientSecret: boolean;
+  hasCookieSecret: boolean;
+  callbackUrl: string;
+  isVercel: boolean;
+};
+
 const captionPrompts = [
   'Behind the scenes from today. What should we make next?',
   'Quick tip: save this for later and follow for more.',
@@ -39,12 +48,30 @@ export function UploadForm() {
   const [tags, setTags] = useState('Shorts');
   const [visibility, setVisibility] = useState('private');
   const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
+  const [deploymentConfig, setDeploymentConfig] = useState<DeploymentConfig | null>(null);
 
   useEffect(() => {
-    fetch('/api/auth/status')
-      .then((response) => response.json())
-      .then((data: { youtube: boolean }) => setIsConnected(data.youtube))
-      .catch(() => setMessage('Could not read YouTube connection status.'));
+    const authStatus = new URLSearchParams(window.location.search).get('auth');
+    const authMessages: Record<string, string> = {
+      connected: 'YouTube connected. You can publish when your Short is ready.',
+      failed: 'YouTube connection failed. Please try connecting again.',
+      'missing-config': 'Add Google OAuth environment variables in Vercel before connecting YouTube.',
+    };
+
+    if (authStatus && authMessages[authStatus]) {
+      setMessage(authMessages[authStatus]);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    Promise.all([
+      fetch('/api/auth/status').then((response) => response.json()),
+      fetch('/api/config/status').then((response) => response.json()),
+    ])
+      .then(([authData, configData]: [{ youtube: boolean }, DeploymentConfig]) => {
+        setIsConnected(authData.youtube);
+        setDeploymentConfig(configData);
+      })
+      .catch(() => setMessage('Could not read YouTube connection or deployment status.'));
   }, []);
 
   const parsedTags = useMemo(
@@ -57,6 +84,7 @@ export function UploadForm() {
   );
 
   const shortTitle = title.includes('#Shorts') ? title : `${title || 'Your Short title'} #Shorts`;
+  const isYouTubeReady = deploymentConfig?.youtubeReady ?? false;
   const completedSteps = [Boolean(videoDetails), title.trim().length > 0, description.trim().length > 0, isConnected].filter(Boolean).length;
 
   function handleVideoChange(event: ChangeEvent<HTMLInputElement>) {
@@ -125,13 +153,25 @@ export function UploadForm() {
             <button onClick={disconnect} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
               Disconnect
             </button>
-          ) : (
+          ) : isYouTubeReady ? (
             <a className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400" href="/api/auth/youtube/start">
               Connect YouTube
             </a>
+          ) : (
+            <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-4 py-2 text-sm text-amber-100">
+              Configure Vercel env
+            </span>
           )}
         </div>
       </div>
+
+      {deploymentConfig && !deploymentConfig.youtubeReady && (
+        <div className="rounded-3xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-50">
+          <p className="font-semibold">Vercel page is live. Finish one-time YouTube setup to enable publishing.</p>
+          <p className="mt-2 text-amber-100/90">Add <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, and <code>AUTH_COOKIE_SECRET</code> in Vercel, then add this callback URL in Google Cloud:</p>
+          <code className="mt-3 block overflow-x-auto rounded-2xl bg-black/30 p-3 text-xs text-white">{deploymentConfig.callbackUrl}</code>
+        </div>
+      )}
 
       <div className="grid gap-3 rounded-3xl border border-white/10 bg-slate-950/60 p-4 sm:grid-cols-4">
         {['Video', 'Caption', 'Details', 'Account'].map((step, index) => (
@@ -217,10 +257,11 @@ export function UploadForm() {
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Video</dt><dd>{videoDetails ? videoDetails.size : 'Not selected'}</dd></div>
           </dl>
 
-          <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isConnected || isPublishing} type="submit">
+          <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isYouTubeReady || !isConnected || isPublishing} type="submit">
             {isPublishing ? 'Publishing...' : 'Publish Short'}
           </button>
-          {!isConnected && <p className="text-center text-sm text-amber-100">Connect YouTube before publishing.</p>}
+          {!isYouTubeReady && <p className="text-center text-sm text-amber-100">Finish Vercel environment setup before connecting YouTube.</p>}
+          {isYouTubeReady && !isConnected && <p className="text-center text-sm text-amber-100">Connect YouTube before publishing.</p>}
         </aside>
       </form>
 

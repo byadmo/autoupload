@@ -16,15 +16,15 @@ npm run dev
 
 ## Deploying on Vercel
 
-This is a full-stack Next.js app, so deploy it to Vercel rather than GitHub Pages. GitHub Pages can host static files, but this app needs serverless API routes for OAuth and YouTube publishing.
+This is a full-stack Next.js app, so deploy it to Vercel rather than GitHub Pages. GitHub Pages can host static files, but this app needs serverless API routes for OAuth and YouTube publishing. The home page loads even before OAuth variables are configured and shows the exact callback URL to paste into Google Cloud.
 
 1. Import the repository into Vercel as a Next.js project.
-2. Add these environment variables in Vercel Project Settings → Environment Variables:
+2. Open the deployed page once; it will show the callback URL derived from that Vercel deployment. Add these environment variables in Vercel Project Settings → Environment Variables:
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
    - `AUTH_COOKIE_SECRET`
    - `NEXT_PUBLIC_APP_URL` set to your production deployment, for example `https://your-project.vercel.app`
-   - `GOOGLE_REDIRECT_URI` is optional; set it only if you want to override the derived callback URL.
+   - `GOOGLE_REDIRECT_URI` is optional; set it only if you want to override the callback URL shown on the deployed page.
 3. In Google Cloud OAuth credentials, add your production callback URL as an authorized redirect URI:
    - `https://your-project.vercel.app/api/auth/youtube/callback`
 4. Deploy. The included `vercel.json` pins the project to the Next.js framework and gives the YouTube publish route a longer function timeout. The app uses pinned Next.js/React versions in `package.json` so Vercel builds are reproducible instead of floating on `latest`.
@@ -40,6 +40,7 @@ The app can be viewed and the OAuth flow can run on Vercel, but Vercel Serverles
 - `src/lib/publishers/registry.ts` is the extension point for future Instagram and TikTok publishers.
 - `src/lib/youtube/oauth.ts` contains YouTube OAuth helpers.
 - `src/lib/app-url.ts` derives callback URLs for local development and Vercel deployments.
+- `src/app/api/config/status/route.ts` lets the client detect whether Vercel OAuth environment variables are ready and show setup guidance instead of a broken connect link.
 
 ## YouTube Shorts notes
 
