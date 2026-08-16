@@ -14,6 +14,11 @@ npm install
 npm run dev
 ```
 
+## One-click deployment paths
+
+- Use Vercel for the real app because OAuth and YouTube upload routes need server-side execution.
+- Use the included GitHub Pages workflow as a static launcher that redirects visitors to the Vercel app. See `DEPLOYMENT.md` for the exact secrets, variables, and workflow steps.
+
 ## Deploying on Vercel
 
 This is a full-stack Next.js app, so deploy it to Vercel rather than GitHub Pages. GitHub Pages can host static files, but this app needs serverless API routes for OAuth and YouTube publishing. The home page loads even before OAuth variables are configured and shows the exact callback URL to paste into Google Cloud.
