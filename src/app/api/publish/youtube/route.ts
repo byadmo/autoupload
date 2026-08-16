@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
   const visibilityValue = String(formData.get('visibility') ?? 'private') as PublishVisibility;
+  const tags = String(formData.get('tags') ?? '')
+    .split(',')
+    .map((tag) => tag.trim().replace(/^#/, ''))
+    .filter(Boolean);
 
   if (!(video instanceof File) || !video.type.startsWith('video/')) {
     return NextResponse.json({ error: 'Upload a valid video file.' }, { status: 400 });
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   const publisher = getPublisher('youtube', tokens);
-  const result = await publisher.publish(video, { title, description, visibility: visibilityValue });
+  const result = await publisher.publish(video, { title, description, visibility: visibilityValue, tags });
 
   return NextResponse.json(result);
 }

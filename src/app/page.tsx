@@ -10,11 +10,11 @@ export default function Home() {
           </div>
           <h1 className="text-5xl font-bold tracking-tight text-white md:text-6xl">Upload once. Publish as a YouTube Short.</h1>
           <p className="text-lg leading-8 text-slate-300">
-            Connect a Google account, choose a vertical video, add metadata, and publish through the official YouTube Data API. The publisher layer is isolated so Instagram and TikTok connectors can be added next.
+            Connect a Google account, choose a vertical video, craft the caption, add hashtags, preview the Short card, and publish through the official YouTube Data API. The publisher layer is isolated so Instagram and TikTok connectors can be added next.
           </p>
           <div className="grid gap-3 text-sm text-slate-300">
             <p>• Uses OAuth 2.0 with the YouTube upload scope.</p>
-            <p>• Appends #Shorts and tags the upload for Shorts discovery.</p>
+            <p>• Includes a caption workspace, hashtag picker, visibility control, and live preview.</p>
             <p>• Keeps provider-specific code behind a reusable publisher interface.</p>
           </div>
         </section>
