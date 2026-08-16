@@ -27,7 +27,7 @@ This is a full-stack Next.js app, so deploy it to Vercel rather than GitHub Page
    - `GOOGLE_REDIRECT_URI` is optional; set it only if you want to override the derived callback URL.
 3. In Google Cloud OAuth credentials, add your production callback URL as an authorized redirect URI:
    - `https://your-project.vercel.app/api/auth/youtube/callback`
-4. Deploy. The included `vercel.json` pins the project to the Next.js framework and gives the YouTube publish route a longer function timeout.
+4. Deploy. The included `vercel.json` pins the project to the Next.js framework and gives the YouTube publish route a longer function timeout. The app uses pinned Next.js/React versions in `package.json` so Vercel builds are reproducible instead of floating on `latest`.
 
 ### Vercel upload limit note
 
