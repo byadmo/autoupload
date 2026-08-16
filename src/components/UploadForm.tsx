@@ -13,13 +13,26 @@ type VideoDetails = {
   type: string;
 };
 
+type ProviderStatus = 'ready' | 'needs_env' | 'coming_soon';
+
 type DeploymentConfig = {
+  authenticated: boolean;
   youtubeReady: boolean;
   hasGoogleClientId: boolean;
   hasGoogleClientSecret: boolean;
   hasCookieSecret: boolean;
   callbackUrl: string;
   isVercel: boolean;
+  providers: {
+    youtube: ProviderStatus;
+    tiktok: ProviderStatus;
+    instagram: ProviderStatus;
+  };
+};
+
+type AppSession = {
+  authenticated: boolean;
+  username: string | null;
 };
 
 const captionPrompts = [
@@ -49,13 +62,20 @@ export function UploadForm() {
   const [visibility, setVisibility] = useState('private');
   const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
   const [deploymentConfig, setDeploymentConfig] = useState<DeploymentConfig | null>(null);
+  const [session, setSession] = useState<AppSession>({ authenticated: false, username: null });
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin');
 
   useEffect(() => {
-    const authStatus = new URLSearchParams(window.location.search).get('auth');
+    const params = new URLSearchParams(window.location.search);
+    const authStatus = params.get('auth') ?? (params.get('login') === 'required' ? 'login-required' : null);
     const authMessages: Record<string, string> = {
       connected: 'YouTube connected. You can publish when your Short is ready.',
       failed: 'YouTube connection failed. Please try connecting again.',
-      'missing-config': 'Add Google OAuth environment variables in Vercel before connecting YouTube.',
+      'missing-config': 'Add Google OAuth environment variables before connecting YouTube.',
+      'tiktok-coming-soon': 'TikTok OAuth is ready in the interface, but TIKTOK_AUTH_URL is not configured yet.',
+      'instagram-coming-soon': 'Instagram OAuth is ready in the interface, but INSTAGRAM_AUTH_URL is not configured yet.',
+      'login-required': 'Log in as admin before connecting channels.',
     };
 
     if (authStatus && authMessages[authStatus]) {
@@ -64,10 +84,12 @@ export function UploadForm() {
     }
 
     Promise.all([
+      fetch('/api/app/status').then((response) => response.json()),
       fetch('/api/auth/status').then((response) => response.json()),
       fetch('/api/config/status').then((response) => response.json()),
     ])
-      .then(([authData, configData]: [{ youtube: boolean }, DeploymentConfig]) => {
+      .then(([sessionData, authData, configData]: [AppSession, { youtube: boolean }, DeploymentConfig]) => {
+        setSession(sessionData);
         setIsConnected(authData.youtube);
         setDeploymentConfig(configData);
       })
@@ -84,7 +106,8 @@ export function UploadForm() {
   );
 
   const shortTitle = title.includes('#Shorts') ? title : `${title || 'Your Short title'} #Shorts`;
-  const isYouTubeReady = deploymentConfig?.youtubeReady ?? false;
+  const isLoggedIn = session.authenticated;
+  const isYouTubeReady = Boolean(isLoggedIn && deploymentConfig?.youtubeReady);
   const completedSteps = [Boolean(videoDetails), title.trim().length > 0, description.trim().length > 0, isConnected].filter(Boolean).length;
 
   function handleVideoChange(event: ChangeEvent<HTMLInputElement>) {
@@ -106,6 +129,41 @@ export function UploadForm() {
     const nextTags = new Set(parsedTags);
     nextTags.add(tag.replace(/^#/, ''));
     setTags(Array.from(nextTags).join(', '));
+  }
+
+  async function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage('Signing in...');
+
+    const response = await fetch('/api/app/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.error ?? 'Login failed.');
+      return;
+    }
+
+    setSession(data);
+    setMessage('Signed in as admin. Connect your channels to continue.');
+
+    const [authData, configData] = await Promise.all([
+      fetch('/api/auth/status').then((authResponse) => authResponse.json()),
+      fetch('/api/config/status').then((configResponse) => configResponse.json()),
+    ]);
+    setIsConnected(authData.youtube);
+    setDeploymentConfig(configData);
+  }
+
+  async function logout() {
+    await fetch('/api/app/logout', { method: 'POST' });
+    setSession({ authenticated: false, username: null });
+    setIsConnected(false);
+    setResult(null);
+    setMessage('Signed out.');
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -146,26 +204,71 @@ export function UploadForm() {
           <p className="mt-2 max-w-2xl text-sm text-slate-300">Upload the video, shape the caption, choose hashtags, review the preview, then publish.</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isConnected ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100'}`}>
-            {isConnected ? 'YouTube connected' : 'Connect required'}
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isLoggedIn ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100'}`}>
+            {isLoggedIn ? 'Signed in as admin' : 'Login required'}
           </span>
-          {isConnected ? (
-            <button onClick={disconnect} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
-              Disconnect
+          {isLoggedIn ? (
+            <button onClick={logout} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
+              Log out
             </button>
-          ) : isYouTubeReady ? (
-            <a className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400" href="/api/auth/youtube/start">
-              Connect YouTube
-            </a>
           ) : (
             <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-4 py-2 text-sm text-amber-100">
-              Configure Vercel env
+              admin / admin
             </span>
           )}
         </div>
       </div>
 
-      {deploymentConfig && !deploymentConfig.youtubeReady && (
+      {!isLoggedIn && (
+        <form className="grid gap-3 rounded-3xl border border-white/10 bg-slate-950/70 p-5 sm:grid-cols-[1fr_1fr_auto]" onSubmit={login}>
+          <label className="grid gap-2 text-sm">
+            <span className="text-slate-300">Username</span>
+            <input className="rounded-2xl border border-white/10 bg-slate-950 p-3" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" />
+          </label>
+          <label className="grid gap-2 text-sm">
+            <span className="text-slate-300">Password</span>
+            <input className="rounded-2xl border border-white/10 bg-slate-950 p-3" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
+          </label>
+          <button className="self-end rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950" type="submit">
+            Log in
+          </button>
+          <p className="text-sm text-slate-400 sm:col-span-3">Use username <code>admin</code> and password <code>admin</code> to access channel connections and publishing.</p>
+        </form>
+      )}
+
+      {isLoggedIn && (
+        <div className="grid gap-3 rounded-3xl border border-white/10 bg-slate-950/60 p-4 md:grid-cols-3">
+          {[
+            { provider: 'youtube', label: 'YouTube', connected: isConnected, helper: 'Official Data API upload flow.' },
+            { provider: 'tiktok', label: 'TikTok', connected: false, helper: 'Connector slot ready for TikTok OAuth credentials.', href: '/api/auth/tiktok/start' },
+            { provider: 'instagram', label: 'Instagram', connected: false, helper: 'Connector slot ready for Instagram Graph API credentials.', href: '/api/auth/instagram/start' },
+          ].map((channel) => {
+            const status = deploymentConfig?.providers[channel.provider as keyof DeploymentConfig['providers']];
+            return (
+              <div key={channel.provider} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold">{channel.label}</h3>
+                  <span className={`rounded-full px-2 py-1 text-xs ${channel.connected ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
+                    {channel.connected ? 'Connected' : status === 'ready' ? 'Ready' : status === 'needs_env' ? 'Needs env' : 'Next'}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-slate-400">{channel.helper}</p>
+                {channel.provider === 'youtube' && !channel.connected && isYouTubeReady && (
+                  <a className="mt-4 inline-flex rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400" href="/api/auth/youtube/start">Connect YouTube</a>
+                )}
+                {channel.provider === 'youtube' && channel.connected && (
+                  <button onClick={disconnect} className="mt-4 rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">Disconnect</button>
+                )}
+                {channel.provider !== 'youtube' && 'href' in channel && (
+                  <a className="mt-4 inline-flex rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 hover:bg-white/10" href={channel.href}>Connect {channel.label}</a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {isLoggedIn && deploymentConfig && !deploymentConfig.youtubeReady && (
         <div className="rounded-3xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-50">
           <p className="font-semibold">Vercel page is live. Finish one-time YouTube setup to enable publishing.</p>
           <p className="mt-2 text-amber-100/90">Add <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, and <code>AUTH_COOKIE_SECRET</code> in Vercel, then add this callback URL in Google Cloud:</p>
@@ -260,7 +363,8 @@ export function UploadForm() {
           <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isYouTubeReady || !isConnected || isPublishing} type="submit">
             {isPublishing ? 'Publishing...' : 'Publish Short'}
           </button>
-          {!isYouTubeReady && <p className="text-center text-sm text-amber-100">Finish Vercel environment setup before connecting YouTube.</p>}
+          {!isLoggedIn && <p className="text-center text-sm text-amber-100">Log in with admin/admin before connecting channels.</p>}
+          {isLoggedIn && !isYouTubeReady && <p className="text-center text-sm text-amber-100">Finish environment setup before connecting YouTube.</p>}
           {isYouTubeReady && !isConnected && <p className="text-center text-sm text-amber-100">Connect YouTube before publishing.</p>}
         </aside>
       </form>

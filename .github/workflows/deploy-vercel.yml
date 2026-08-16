@@ -13,25 +13,37 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      HAS_VERCEL_SECRETS: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Explain skipped deployment
+        if: env.HAS_VERCEL_SECRETS != 'true'
+        run: |
+          echo "Vercel deployment skipped."
+          echo "Add repository secrets VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID, then rerun this workflow."
+
       - name: Setup Node
+        if: env.HAS_VERCEL_SECRETS == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
+        if: env.HAS_VERCEL_SECRETS == 'true'
         run: npm install
 
       - name: Pull Vercel environment
+        if: env.HAS_VERCEL_SECRETS == 'true'
         run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Vercel output
+        if: env.HAS_VERCEL_SECRETS == 'true'
         run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Vercel output
+        if: env.HAS_VERCEL_SECRETS == 'true'
         id: deploy
         run: |
           url=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})

@@ -28,6 +28,7 @@ This is a full-stack Next.js app, so deploy it to Vercel rather than GitHub Page
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
    - `AUTH_COOKIE_SECRET`
+   - Optional future connector targets: `TIKTOK_AUTH_URL`, `INSTAGRAM_AUTH_URL`
    - `NEXT_PUBLIC_APP_URL` set to your production deployment, for example `https://your-project.vercel.app`
    - `GOOGLE_REDIRECT_URI` is optional; set it only if you want to override the callback URL shown on the deployed page.
 3. In Google Cloud OAuth credentials, add your production callback URL as an authorized redirect URI:
@@ -46,6 +47,10 @@ The app can be viewed and the OAuth flow can run on Vercel, but Vercel Serverles
 - `src/lib/youtube/oauth.ts` contains YouTube OAuth helpers.
 - `src/lib/app-url.ts` derives callback URLs for local development and Vercel deployments.
 - `src/app/api/config/status/route.ts` lets the client detect whether Vercel OAuth environment variables are ready and show setup guidance instead of a broken connect link.
+
+## App login
+
+The dashboard is accessible to anyone who knows the configured V1 credentials. For this prototype, the username is `admin` and the password is `admin`. After login, users can connect YouTube and open TikTok/Instagram connector slots from the channel cards.
 
 ## YouTube Shorts notes
 

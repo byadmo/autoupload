@@ -3,7 +3,13 @@ import { consumeOAuthState, setYouTubeTokens } from '@/lib/auth-cookie';
 import { createOAuthClient } from '@/lib/youtube/oauth';
 import { getYouTubeRedirectUri } from '@/lib/app-url';
 
+import { getAppSession } from '@/lib/app-session';
 export async function GET(request: NextRequest) {
+  const session = await getAppSession();
+  if (!session) {
+    return NextResponse.redirect(new URL('/?login=required', request.url));
+  }
+
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return NextResponse.redirect(new URL('/?auth=missing-config', request.url));
   }

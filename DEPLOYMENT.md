@@ -12,7 +12,7 @@ The production app must run on Vercel because YouTube OAuth and video upload pub
    - `NEXT_PUBLIC_APP_URL` with the production Vercel URL, for example `https://your-project.vercel.app`
 3. Add the app callback URL in Google Cloud OAuth credentials:
    - `https://your-project.vercel.app/api/auth/youtube/callback`
-4. Optional GitHub Actions deployment: add repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, then run the **Deploy to Vercel** workflow.
+4. Optional GitHub Actions deployment: add repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, then run the **Deploy to Vercel** workflow. If these secrets are missing, the workflow exits successfully with a clear skip message instead of failing on Vercel CLI authentication.
 
 ## GitHub Pages launcher
 
