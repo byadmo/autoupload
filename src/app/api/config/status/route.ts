@@ -18,6 +18,5 @@ export async function GET(request: NextRequest) {
       tiktok: process.env.TIKTOK_AUTH_URL ? 'ready' : 'coming_soon',
       instagram: process.env.INSTAGRAM_AUTH_URL ? 'ready' : 'coming_soon',
     },
-    isVercel: Boolean(process.env.VERCEL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL),
   });
 }

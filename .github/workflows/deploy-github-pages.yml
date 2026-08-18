@@ -26,13 +26,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Vercel app URL
+      - name: Configure app URL
         run: |
-          app_url="${{ vars.VERCEL_APP_URL }}"
+          app_url="${{ vars.APP_URL }}"
           if [ -z "$app_url" ]; then
-            app_url="https://example.vercel.app"
+            app_url="https://example.com"
           fi
-          sed "s#__VERCEL_APP_URL__#$app_url#g" github-pages/index.html > github-pages/index.resolved.html
+          sed "s#__APP_URL__#$app_url#g" github-pages/index.html > github-pages/index.resolved.html
           mv github-pages/index.resolved.html github-pages/index.html
 
       - name: Setup Pages

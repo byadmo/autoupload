@@ -1,8 +1,0 @@
-{
-  "framework": "nextjs",
-  "functions": {
-    "src/app/api/publish/youtube/route.ts": {
-      "maxDuration": 60
-    }
-  }
-}
