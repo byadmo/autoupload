@@ -17,7 +17,7 @@ npm run dev
 ## One-click deployment paths
 
 - Use Vercel for the real app because OAuth and YouTube upload routes need server-side execution.
-- Use the included GitHub Pages workflow as a static launcher that redirects visitors to the Vercel app. See `DEPLOYMENT.md` for the exact secrets, variables, and workflow steps.
+- Use the included GitHub Pages workflow as a static upload-style entry page that sends final connection and publishing actions to the Vercel app. See `DEPLOYMENT.md` for the exact secrets, variables, and workflow steps.
 
 ## Deploying on Vercel
 

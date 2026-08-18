@@ -1,6 +1,6 @@
 # Deployment
 
-The production app must run on Vercel because YouTube OAuth and video upload publishing require server-side API routes. GitHub Pages can only host static files, so this repo includes a static GitHub Pages launcher that redirects users to the Vercel deployment.
+The production app must run on Vercel because YouTube OAuth and video upload publishing require server-side API routes. GitHub Pages can only host static files, so this repo includes a static GitHub Pages upload entry page that redirects users to the Vercel deployment.
 
 ## Vercel deployment
 
@@ -14,11 +14,11 @@ The production app must run on Vercel because YouTube OAuth and video upload pub
    - `https://your-project.vercel.app/api/auth/youtube/callback`
 4. Optional GitHub Actions deployment: add repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, then run the **Deploy to Vercel** workflow. If these secrets are missing, the workflow exits successfully with a clear skip message instead of failing on Vercel CLI authentication.
 
-## GitHub Pages launcher
+## GitHub Pages upload entry page
 
 1. In GitHub repository settings, enable Pages from GitHub Actions.
 2. Add repository variable `VERCEL_APP_URL` with the production Vercel URL.
-3. Run the **Deploy GitHub Pages launcher** workflow.
-4. Visitors to GitHub Pages will see a static launcher and be redirected to the Vercel app, where OAuth and publishing work.
+3. Run the **Deploy GitHub Pages upload entry page** workflow.
+4. Visitors to GitHub Pages will see a static upload-style page and continue into the Vercel app for OAuth and publishing, where OAuth and publishing work.
 
-GitHub Pages cannot directly run `/api/auth/*` or `/api/publish/*`; using it as a launcher keeps the page accessible while preserving the working full-stack Vercel app.
+GitHub Pages cannot directly run `/api/auth/*` or `/api/publish/*`; using it as an upload entry page keeps the page accessible while preserving the working full-stack Vercel app.
