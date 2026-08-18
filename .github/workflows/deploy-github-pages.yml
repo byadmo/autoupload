@@ -1,0 +1,48 @@
+name: Deploy GitHub Pages launcher
+
+on:
+  push:
+    branches:
+      - main
+      - work
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Vercel app URL
+        run: |
+          app_url="${{ vars.VERCEL_APP_URL }}"
+          if [ -z "$app_url" ]; then
+            app_url="https://example.vercel.app"
+          fi
+          sed "s#__VERCEL_APP_URL__#$app_url#g" github-pages/index.html > github-pages/index.resolved.html
+          mv github-pages/index.resolved.html github-pages/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: github-pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

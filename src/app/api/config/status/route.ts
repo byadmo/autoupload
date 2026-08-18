@@ -1,0 +1,25 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getYouTubeRedirectUri } from '@/lib/app-url';
+
+import { getAppSession } from '@/lib/app-session';
+export async function GET(request: NextRequest) {
+  const session = await getAppSession();
+  const hasGoogleClientId = Boolean(process.env.GOOGLE_CLIENT_ID);
+  const hasGoogleClientSecret = Boolean(process.env.GOOGLE_CLIENT_SECRET);
+  const hasCookieSecret = Boolean(process.env.AUTH_COOKIE_SECRET);
+
+  return NextResponse.json({
+    authenticated: Boolean(session),
+    youtubeReady: Boolean(session) && hasGoogleClientId && hasGoogleClientSecret && hasCookieSecret,
+    hasGoogleClientId,
+    hasGoogleClientSecret,
+    hasCookieSecret,
+    callbackUrl: getYouTubeRedirectUri(request),
+    providers: {
+      youtube: hasGoogleClientId && hasGoogleClientSecret && hasCookieSecret ? 'ready' : 'needs_env',
+      tiktok: process.env.TIKTOK_AUTH_URL ? 'ready' : 'coming_soon',
+      instagram: process.env.INSTAGRAM_AUTH_URL ? 'ready' : 'coming_soon',
+    },
+    isVercel: Boolean(process.env.VERCEL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL),
+  });
+}
