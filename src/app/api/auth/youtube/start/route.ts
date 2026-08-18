@@ -9,6 +9,6 @@ export async function GET(request: NextRequest) {
   }
 
   const state = randomBytes(32).toString('base64url');
-  await setOAuthState(state);
+  await setOAuthState('youtube', state);
   return NextResponse.redirect(createYouTubeAuthUrl(state, request));
 }

@@ -9,9 +9,13 @@ This app requires a server runtime for YouTube OAuth and publishing routes. You 
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
    - `AUTH_COOKIE_SECRET`
+   - Optional provider authorize URLs: `TIKTOK_AUTH_URL`, `INSTAGRAM_AUTH_URL`
    - `NEXT_PUBLIC_APP_URL` with your production app URL, for example `https://your-domain.com`
 3. Add the app callback URL in Google Cloud OAuth credentials:
    - `https://your-domain.com/api/auth/youtube/callback`
+4. If you enable TikTok and Instagram login, configure each provider authorize URL to redirect back to:
+   - `https://your-domain.com/api/auth/tiktok/callback`
+   - `https://your-domain.com/api/auth/instagram/callback`
 
 ## GitHub Pages upload entry page
 

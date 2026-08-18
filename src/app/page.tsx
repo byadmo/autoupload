@@ -16,8 +16,8 @@ export default function Home() {
               </p>
             </div>
             <div className="grid gap-2 rounded-3xl bg-slate-950/70 p-4 text-sm text-slate-300 sm:min-w-72">
-              <p className="font-semibold text-white">Sign-in method</p>
-              <p>Google OAuth with your YouTube account</p>
+              <p className="font-semibold text-white">Sign-in methods</p>
+              <p>Google OAuth (YouTube), TikTok OAuth, Instagram OAuth</p>
             </div>
           </div>
         </header>

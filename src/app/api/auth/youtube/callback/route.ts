@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
-  const expectedState = await consumeOAuthState();
+  const expectedState = await consumeOAuthState('youtube');
 
   if (!code || !state || state !== expectedState) {
     return NextResponse.redirect(new URL('/?auth=failed', request.url));

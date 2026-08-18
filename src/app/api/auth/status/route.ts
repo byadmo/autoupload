@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getYouTubeTokens } from '@/lib/auth-cookie';
+import { getInstagramTokens, getTikTokTokens, getYouTubeTokens } from '@/lib/auth-cookie';
 
 export async function GET() {
-  const tokens = await getYouTubeTokens();
-  const isAuthenticated = Boolean(tokens?.access_token || tokens?.refresh_token);
-  return NextResponse.json({ youtube: isAuthenticated, authenticated: isAuthenticated });
+  const [youtubeTokens, tiktokTokens, instagramTokens] = await Promise.all([getYouTubeTokens(), getTikTokTokens(), getInstagramTokens()]);
+  const youtube = Boolean(youtubeTokens?.access_token || youtubeTokens?.refresh_token);
+  const tiktok = Boolean(tiktokTokens?.code);
+  const instagram = Boolean(instagramTokens?.code);
+
+  return NextResponse.json({ youtube, tiktok, instagram, authenticated: youtube || tiktok || instagram });
 }

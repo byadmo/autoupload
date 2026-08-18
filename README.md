@@ -23,7 +23,7 @@ This is a full-stack Next.js app, so it must run on a platform that supports ser
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
    - `AUTH_COOKIE_SECRET`
-   - Optional future connector targets: `TIKTOK_AUTH_URL`, `INSTAGRAM_AUTH_URL`
+   - Optional social OAuth authorize URLs: `TIKTOK_AUTH_URL`, `INSTAGRAM_AUTH_URL`
    - `NEXT_PUBLIC_APP_URL` set to your production deployment URL, for example `https://your-domain.com`
    - `GOOGLE_REDIRECT_URI` is optional; set it only if you want to override the callback URL shown on the deployed page.
 3. In Google Cloud OAuth credentials, add your production callback URL as an authorized redirect URI:
@@ -42,7 +42,13 @@ See `DEPLOYMENT.md` for GitHub Pages launcher setup and deployment details.
 
 ## App login
 
-The dashboard uses Google OAuth through the YouTube connection flow. Sign in with Google from the YouTube card, then publish once the channel is connected.
+The dashboard supports OAuth account connection for YouTube, TikTok, and Instagram:
+
+- YouTube uses Google OAuth and is required for publishing in this version.
+- TikTok and Instagram connections are available from their provider cards.
+- For TikTok/Instagram, configure each provider authorize URL so OAuth redirects back to this app:
+  - `.../api/auth/tiktok/callback`
+  - `.../api/auth/instagram/callback`
 
 ## YouTube Shorts notes
 

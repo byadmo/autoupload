@@ -13,7 +13,9 @@ type VideoDetails = {
   type: string;
 };
 
-type ProviderStatus = 'ready' | 'needs_env' | 'coming_soon';
+type Provider = 'youtube' | 'tiktok' | 'instagram';
+type ProviderStatus = 'ready' | 'needs_env';
+type AuthStatus = Record<Provider, boolean>;
 
 type DeploymentConfig = {
   youtubeReady: boolean;
@@ -45,7 +47,7 @@ function formatFileSize(bytes: number) {
 }
 
 export function UploadForm() {
-  const [isConnected, setIsConnected] = useState(false);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>({ youtube: false, tiktok: false, instagram: false });
   const [isPublishing, setIsPublishing] = useState(false);
   const [message, setMessage] = useState('');
   const [result, setResult] = useState<PublishResult | null>(null);
@@ -63,8 +65,12 @@ export function UploadForm() {
       connected: 'YouTube connected. You can publish when your Short is ready.',
       failed: 'YouTube connection failed. Please try connecting again.',
       'missing-config': 'Add Google OAuth environment variables before connecting YouTube.',
-      'tiktok-coming-soon': 'TikTok OAuth is ready in the interface, but TIKTOK_AUTH_URL is not configured yet.',
-      'instagram-coming-soon': 'Instagram OAuth is ready in the interface, but INSTAGRAM_AUTH_URL is not configured yet.',
+      'tiktok-connected': 'TikTok connected.',
+      'tiktok-failed': 'TikTok connection failed. Please try again.',
+      'tiktok-missing-config': 'Add TIKTOK_AUTH_URL with a callback to /api/auth/tiktok/callback before connecting TikTok.',
+      'instagram-connected': 'Instagram connected.',
+      'instagram-failed': 'Instagram connection failed. Please try again.',
+      'instagram-missing-config': 'Add INSTAGRAM_AUTH_URL with a callback to /api/auth/instagram/callback before connecting Instagram.',
     };
 
     if (authStatus && authMessages[authStatus]) {
@@ -73,11 +79,11 @@ export function UploadForm() {
     }
 
     Promise.all([fetch('/api/auth/status').then((response) => response.json()), fetch('/api/config/status').then((response) => response.json())])
-      .then(([authData, configData]: [{ youtube: boolean }, DeploymentConfig]) => {
-        setIsConnected(authData.youtube);
+      .then(([authData, configData]: [AuthStatus, DeploymentConfig]) => {
+        setAuthStatus({ youtube: authData.youtube, tiktok: authData.tiktok, instagram: authData.instagram });
         setDeploymentConfig(configData);
       })
-      .catch(() => setMessage('Could not read YouTube connection or deployment status.'));
+      .catch(() => setMessage('Could not read channel connection or deployment status.'));
   }, []);
 
   const parsedTags = useMemo(
@@ -90,9 +96,9 @@ export function UploadForm() {
   );
 
   const shortTitle = title.includes('#Shorts') ? title : `${title || 'Your Short title'} #Shorts`;
-  const isLoggedIn = isConnected;
+  const isLoggedIn = authStatus.youtube;
   const isYouTubeReady = Boolean(deploymentConfig?.youtubeReady);
-  const completedSteps = [Boolean(videoDetails), title.trim().length > 0, description.trim().length > 0, isConnected].filter(Boolean).length;
+  const completedSteps = [Boolean(videoDetails), title.trim().length > 0, description.trim().length > 0, authStatus.youtube].filter(Boolean).length;
 
   function handleVideoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -137,11 +143,15 @@ export function UploadForm() {
     setResult(data);
   }
 
-  async function disconnect() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setIsConnected(false);
+  async function disconnect(provider: Provider) {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ provider }),
+    });
+    setAuthStatus((current) => ({ ...current, [provider]: false }));
     setResult(null);
-    setMessage('Disconnected YouTube.');
+    setMessage(`Disconnected ${provider[0].toUpperCase()}${provider.slice(1)}.`);
   }
 
   return (
@@ -156,8 +166,8 @@ export function UploadForm() {
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isLoggedIn ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100'}`}>
             {isLoggedIn ? 'Google connected' : 'Google sign-in required'}
           </span>
-          {isConnected && (
-            <button onClick={disconnect} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
+          {authStatus.youtube && (
+            <button onClick={() => disconnect('youtube')} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
               Disconnect Google
             </button>
           )}
@@ -166,9 +176,9 @@ export function UploadForm() {
 
       <div className="grid gap-3 rounded-3xl border border-white/10 bg-slate-950/60 p-4 md:grid-cols-3">
         {[
-          { provider: 'youtube', label: 'YouTube', connected: isConnected, helper: 'Use Google OAuth to sign in and publish with the YouTube Data API.' },
-          { provider: 'tiktok', label: 'TikTok', connected: false, helper: 'Connector slot ready for TikTok OAuth credentials.', href: '/api/auth/tiktok/start' },
-          { provider: 'instagram', label: 'Instagram', connected: false, helper: 'Connector slot ready for Instagram Graph API credentials.', href: '/api/auth/instagram/start' },
+          { provider: 'youtube', label: 'YouTube', connected: authStatus.youtube, helper: 'Use Google OAuth to sign in and publish with the YouTube Data API.', href: '/api/auth/youtube/start' },
+          { provider: 'tiktok', label: 'TikTok', connected: authStatus.tiktok, helper: 'Sign in with TikTok OAuth to connect your account.', href: '/api/auth/tiktok/start' },
+          { provider: 'instagram', label: 'Instagram', connected: authStatus.instagram, helper: 'Sign in with Instagram OAuth to connect your account.', href: '/api/auth/instagram/start' },
         ].map((channel) => {
           const status = deploymentConfig?.providers[channel.provider as keyof DeploymentConfig['providers']];
           return (
@@ -176,18 +186,18 @@ export function UploadForm() {
               <div className="flex items-center justify-between gap-3">
                 <h3 className="font-semibold">{channel.label}</h3>
                 <span className={`rounded-full px-2 py-1 text-xs ${channel.connected ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
-                  {channel.connected ? 'Connected' : status === 'ready' ? 'Ready' : status === 'needs_env' ? 'Needs env' : 'Next'}
+                  {channel.connected ? 'Connected' : status === 'ready' ? 'Ready' : 'Needs env'}
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-400">{channel.helper}</p>
-              {channel.provider === 'youtube' && !channel.connected && isYouTubeReady && (
-                <a className="mt-4 inline-flex rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400" href="/api/auth/youtube/start">Sign in with Google</a>
-              )}
-              {channel.provider === 'youtube' && channel.connected && (
-                <button onClick={disconnect} className="mt-4 rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">Disconnect</button>
-              )}
-              {channel.provider !== 'youtube' && 'href' in channel && (
-                <a className="mt-4 inline-flex rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 hover:bg-white/10" href={channel.href}>Connect {channel.label}</a>
+              {!channel.connected && channel.provider === 'youtube' && !isYouTubeReady ? null : !channel.connected ? (
+                <a className={`mt-4 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${channel.provider === 'youtube' ? 'bg-red-500 text-white hover:bg-red-400' : 'border border-white/15 text-slate-300 hover:bg-white/10'}`} href={channel.href}>
+                  Connect {channel.label}
+                </a>
+              ) : (
+                <button onClick={() => disconnect(channel.provider as Provider)} className="mt-4 rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/10" type="button">
+                  Disconnect
+                </button>
               )}
             </div>
           );
@@ -286,12 +296,12 @@ export function UploadForm() {
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Video</dt><dd>{videoDetails ? videoDetails.size : 'Not selected'}</dd></div>
           </dl>
 
-          <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isYouTubeReady || !isConnected || isPublishing} type="submit">
+          <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isYouTubeReady || !authStatus.youtube || isPublishing} type="submit">
             {isPublishing ? 'Publishing...' : 'Publish Short'}
           </button>
           {!isLoggedIn && <p className="text-center text-sm text-amber-100">Sign in with Google before publishing.</p>}
           {!isYouTubeReady && <p className="text-center text-sm text-amber-100">Finish environment setup before connecting YouTube.</p>}
-          {isYouTubeReady && !isConnected && <p className="text-center text-sm text-amber-100">Connect YouTube before publishing.</p>}
+          {isYouTubeReady && !authStatus.youtube && <p className="text-center text-sm text-amber-100">Connect YouTube before publishing.</p>}
         </aside>
       </form>
 

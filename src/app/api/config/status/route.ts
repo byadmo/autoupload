@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     callbackUrl: getYouTubeRedirectUri(request),
     providers: {
       youtube: hasGoogleClientId && hasGoogleClientSecret && hasCookieSecret ? 'ready' : 'needs_env',
-      tiktok: process.env.TIKTOK_AUTH_URL ? 'ready' : 'coming_soon',
-      instagram: process.env.INSTAGRAM_AUTH_URL ? 'ready' : 'coming_soon',
+      tiktok: process.env.TIKTOK_AUTH_URL ? 'ready' : 'needs_env',
+      instagram: process.env.INSTAGRAM_AUTH_URL ? 'ready' : 'needs_env',
     },
   });
 }
