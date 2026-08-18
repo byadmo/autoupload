@@ -1,24 +1,23 @@
 # Deployment
 
-The production app must run on Vercel because YouTube OAuth and video upload publishing require server-side API routes. GitHub Pages can only host static files, so this repo includes a static GitHub Pages upload entry page that redirects users to the Vercel deployment.
+This app requires a server runtime for YouTube OAuth and publishing routes. You can deploy it to any platform that supports Next.js server routes (self-hosted Node, cloud VM, container platform, etc.).
 
-## Vercel deployment
+## App deployment
 
-1. Create a Vercel project for this repository.
-2. Add these Vercel environment variables:
+1. Deploy this repository as a Next.js app on your chosen host.
+2. Add these environment variables on that host:
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
    - `AUTH_COOKIE_SECRET`
-   - `NEXT_PUBLIC_APP_URL` with the production Vercel URL, for example `https://your-project.vercel.app`
+   - `NEXT_PUBLIC_APP_URL` with your production app URL, for example `https://your-domain.com`
 3. Add the app callback URL in Google Cloud OAuth credentials:
-   - `https://your-project.vercel.app/api/auth/youtube/callback`
-4. Optional GitHub Actions deployment: add repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, then run the **Deploy to Vercel** workflow. If these secrets are missing, the workflow exits successfully with a clear skip message instead of failing on Vercel CLI authentication.
+   - `https://your-domain.com/api/auth/youtube/callback`
 
 ## GitHub Pages upload entry page
 
 1. In GitHub repository settings, enable Pages from GitHub Actions.
-2. Add repository variable `VERCEL_APP_URL` with the production Vercel URL.
-3. Run the **Deploy GitHub Pages upload entry page** workflow.
-4. Visitors to GitHub Pages will see a static upload-style page and continue into the Vercel app for OAuth and publishing, where OAuth and publishing work.
+2. Add repository variable `APP_URL` with your production app URL.
+3. Run the **Deploy GitHub Pages launcher** workflow.
+4. Visitors to GitHub Pages will see a static upload-style page and continue into your app for OAuth and publishing.
 
-GitHub Pages cannot directly run `/api/auth/*` or `/api/publish/*`; using it as an upload entry page keeps the page accessible while preserving the working full-stack Vercel app.
+GitHub Pages cannot directly run `/api/auth/*` or `/api/publish/*`; using it as an upload entry page keeps the page accessible while preserving a working full-stack deployment.

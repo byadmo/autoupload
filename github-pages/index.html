@@ -38,14 +38,14 @@
       <section>
         <h2>Channel connections</h2>
         <div class="channels">
-          <div class="card"><strong>YouTube</strong><p class="muted">Connects through the full app OAuth flow.</p><a class="button" href="__VERCEL_APP_URL__">Connect YouTube</a></div>
-          <div class="card"><strong>TikTok</strong><p class="muted">Connector slot is visible for creator setup.</p><a class="button" href="__VERCEL_APP_URL__">Connect TikTok</a></div>
-          <div class="card"><strong>Instagram</strong><p class="muted">Connector slot is visible for creator setup.</p><a class="button" href="__VERCEL_APP_URL__">Connect Instagram</a></div>
+          <div class="card"><strong>YouTube</strong><p class="muted">Connects through the full app OAuth flow.</p><a class="button" href="__APP_URL__">Connect YouTube</a></div>
+          <div class="card"><strong>TikTok</strong><p class="muted">Connector slot is visible for creator setup.</p><a class="button" href="__APP_URL__">Connect TikTok</a></div>
+          <div class="card"><strong>Instagram</strong><p class="muted">Connector slot is visible for creator setup.</p><a class="button" href="__APP_URL__">Connect Instagram</a></div>
         </div>
       </section>
 
       <section class="grid">
-        <form action="__VERCEL_APP_URL__" method="get">
+        <form action="__APP_URL__" method="get">
           <h2>Prepare upload</h2>
           <label>Video file<input type="file" accept="video/*" /></label><br />
           <label>Title<input name="title" placeholder="My Short title" maxlength="100" /></label><br />
@@ -62,7 +62,7 @@
 
       <section class="notice">
         <strong>Ready to publish?</strong>
-        <p>This page keeps the upload workflow visible on GitHub Pages. The final OAuth and publish action opens the full app at <code>__VERCEL_APP_URL__</code> so server-side YouTube API calls can run.</p>
+        <p>This page keeps the upload workflow visible on GitHub Pages. The final OAuth and publish action opens the full app at <code>__APP_URL__</code> so server-side YouTube API calls can run.</p>
       </section>
     </main>
   </body>

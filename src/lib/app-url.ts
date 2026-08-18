@@ -12,14 +12,6 @@ export function getAppBaseUrl(request?: NextRequest) {
     return normalizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL);
   }
 
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return normalizeBaseUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL);
-  }
-
-  if (process.env.VERCEL_URL) {
-    return normalizeBaseUrl(process.env.VERCEL_URL);
-  }
-
   if (request) {
     return request.nextUrl.origin;
   }

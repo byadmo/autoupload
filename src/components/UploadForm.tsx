@@ -21,7 +21,6 @@ type DeploymentConfig = {
   hasGoogleClientSecret: boolean;
   hasCookieSecret: boolean;
   callbackUrl: string;
-  isVercel: boolean;
   providers: {
     youtube: ProviderStatus;
     tiktok: ProviderStatus;
