@@ -12,13 +12,12 @@ export default function Home() {
               </div>
               <h1 className="mt-5 text-4xl font-bold tracking-tight text-white md:text-6xl">Upload and publish from one page.</h1>
               <p className="mt-4 text-lg leading-8 text-slate-300">
-                Log in with the V1 admin account, connect your social channels, upload a vertical video, write the caption, choose hashtags and visibility, then publish your Short.
+                Sign in with Google, connect your social channels, upload a vertical video, write the caption, choose hashtags and visibility, then publish your Short.
               </p>
             </div>
             <div className="grid gap-2 rounded-3xl bg-slate-950/70 p-4 text-sm text-slate-300 sm:min-w-72">
-              <p className="font-semibold text-white">V1 login</p>
-              <p>Username: <code className="rounded bg-white/10 px-2 py-1">admin</code></p>
-              <p>Password: <code className="rounded bg-white/10 px-2 py-1">admin</code></p>
+              <p className="font-semibold text-white">Sign-in method</p>
+              <p>Google OAuth with your YouTube account</p>
             </div>
           </div>
         </header>

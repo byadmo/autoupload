@@ -3,21 +3,15 @@ import { getYouTubeTokens } from '@/lib/auth-cookie';
 import { getPublisher } from '@/lib/publishers/registry';
 import type { PublishVisibility } from '@/types/publishing';
 
-import { getAppSession } from '@/lib/app-session';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const allowedVisibilities: PublishVisibility[] = ['private', 'unlisted', 'public'];
 
 export async function POST(request: NextRequest) {
-  const session = await getAppSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Log in as admin before publishing.' }, { status: 401 });
-  }
-
   const tokens = await getYouTubeTokens();
   if (!tokens) {
-    return NextResponse.json({ error: 'Connect YouTube before publishing.' }, { status: 401 });
+    return NextResponse.json({ error: 'Sign in with Google before publishing.' }, { status: 401 });
   }
 
   const formData = await request.formData();
