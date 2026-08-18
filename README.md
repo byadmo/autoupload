@@ -50,7 +50,7 @@ The app can be viewed and the OAuth flow can run on Vercel, but Vercel Serverles
 
 ## App login
 
-The dashboard is accessible to anyone who knows the configured V1 credentials. For this prototype, the username is `admin` and the password is `admin`. After login, users can connect YouTube and open TikTok/Instagram connector slots from the channel cards.
+The dashboard uses Google OAuth through the YouTube connection flow. Sign in with Google from the YouTube card, then publish once the channel is connected.
 
 ## YouTube Shorts notes
 

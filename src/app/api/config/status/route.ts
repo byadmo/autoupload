@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getYouTubeRedirectUri } from '@/lib/app-url';
 
-import { getAppSession } from '@/lib/app-session';
 export async function GET(request: NextRequest) {
-  const session = await getAppSession();
   const hasGoogleClientId = Boolean(process.env.GOOGLE_CLIENT_ID);
   const hasGoogleClientSecret = Boolean(process.env.GOOGLE_CLIENT_SECRET);
   const hasCookieSecret = Boolean(process.env.AUTH_COOKIE_SECRET);
 
   return NextResponse.json({
-    authenticated: Boolean(session),
-    youtubeReady: Boolean(session) && hasGoogleClientId && hasGoogleClientSecret && hasCookieSecret,
+    authenticated: true,
+    youtubeReady: hasGoogleClientId && hasGoogleClientSecret && hasCookieSecret,
     hasGoogleClientId,
     hasGoogleClientSecret,
     hasCookieSecret,
